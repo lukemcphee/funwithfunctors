@@ -52,7 +52,7 @@ $ docker-compose up
 
 Wait a minute to let docker start up our container, then navigate to 127.0.0.1:8080 and you should see that Zeppelin has started up:
 
-![](images/image-1024x454.png)
+![]({{ "/assets/images/image-1024x454.png" | relative_url }})
 
 ##### Speaking to spark
 
@@ -63,7 +63,7 @@ import org.apache.spark.sql.SparkSession
 val spark = SparkSession.builder.config(sc.getConf).getOrCreate()
 ```
 
-![](images/image-2-1024x75.png)
+![]({{ "/assets/images/image-2-1024x75.png" | relative_url }})
 
 From here let's start doing something more useful. Rather than going through yet another exercise in map-reduce-to-count-word-frequencies-in-a-string, let's pop across to the https://ourworldindata.org GitHub repo, and grab some sample data; there's lots of data on the current COVID pandemic, so let's use this. I'll include the actual files used in the GitHub repo for this, but the following link should get you the most up to date data at their repo [here](https://github.com/owid/covid-19-data/blob/master/public/data/vaccinations/vaccinations.csv).
 
@@ -80,7 +80,7 @@ val df = spark.read
 df.printSchema
 ```
 
-![](images/image-4.png)
+![]({{ "/assets/images/image-4.png" | relative_url }})
 
 Let's start with something really simple, and look to see which country as issued the most vaccinations so far:
 
@@ -98,7 +98,7 @@ df.groupBy("location")
 totalVaccinations.show(10)
 ```
 
-![](images/image-6.png)
+![]({{ "/assets/images/image-6.png" | relative_url }})
 
 This gives us a high level picture of the sum of our efforts, but say we want to find out how this has developed over time, we might start by collecting the total vaccinations together and sorting them by date so we can track how this changes; something like this:
 
@@ -227,9 +227,9 @@ select location, date, total_vaccinations from vaccinations order by date
 
 Note that you'll need to click into settings and select which fields we're going to be using and for what:
 
-![](images/image-8-1024x318.png)
+![]({{ "/assets/images/image-8-1024x318.png" | relative_url }})
 
-![](images/image-7-1024x309.png)
+![]({{ "/assets/images/image-7-1024x309.png" | relative_url }})
 
 Whist this output is naturally very busy, and a little overwhelming on my 13" MacBook, we're immediately getting a decent view into our data. Picking a few countries at random we can slim this down to allow us to compare whomever we wish:
 
@@ -246,7 +246,7 @@ filtered.createOrReplaceTempView("filtered")
 select * from filtered sort by date
 ```
 
-![](images/image-9-1024x245.png)
+![]({{ "/assets/images/image-9-1024x245.png" | relative_url }})
 
 Easy!
 
@@ -275,7 +275,7 @@ val ukResults = detailsDs.filter(details => details.location.equals("United King
 
 Additionally, if we supply type information and use Dataset's, Zeppelin provides us with some autocomplete functionality.
 
-![](images/image-11.png)
+![]({{ "/assets/images/image-11.png" | relative_url }})
 
 Whilst this support does move us in the right direction, it is a bit sluggish to be honest and isn't really a substitute for a real IDE.
 

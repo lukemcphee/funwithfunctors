@@ -19,7 +19,7 @@ In this series we're going to look at developing an approach to pull market data
 
 We're going to be looking at currency pairs through the lens of graphs where the vertices will represent each currency and the edge weights will represent the quote values. Visualy, the example listed in the intro would look something like this:
 
-![](images/GBP-USD-JPY.png)
+![]({{ "/assets/images/GBP-USD-JPY.png" | relative_url }})
 
 At it's core, if we model our currencies as a graph, we're able to identify arbitrage opportunities by identifying cycles that when the weights are multiplied together, yield a result > 1.
 
@@ -27,19 +27,19 @@ Thankfully for us, graph theory is an extremely mature topic and there are a hos
 
 Take the following graph:
 
-![](images/nonNegativeCycles.png)
+![]({{ "/assets/images/nonNegativeCycles.png" | relative_url }})
 
 Bellman-Ford runs V-1 (at most, in this case we don't need to run this many) relaxations on each node to find the shortest distance to it. In our case we'd have something like this \[A->0, B->5, C->9, D->-1\].
 
 If we update this so that the weights in our cycle (B->C->D->B) sum to a negative figure, eg:
 
-![](images/withNegativeCycles-1.png)
+![]({{ "/assets/images/withNegativeCycles-1.png" | relative_url }})
 
 we can now run this as many times as we want, our algorithm will never terminate at a fixed point; we've found a negative weight cycle.
 
 Attempting to apply this to an example using currency pairs, for example the following:
 
-![](images/nonNegWithPositiveMultipicativeSum.png)
+![]({{ "/assets/images/nonNegWithPositiveMultipicativeSum.png" | relative_url }})
 
 doesn't quite help us, due to the fact that Bellman-Ford identifies _negative sum cycles_ and we're looking for _positive multiplicative cycles_; if we look at our example above, there's clearly an arbitrage opportunity (ETH -> USD -> BTC ->ETH) however a standard Bellman-Ford won't pick up any negative weight cycles. Fortunately there's an easy fix for this; by taking the log of each of our weights prior to processing, we can sum them as normal to find our negative cycles, then exponentiate our result at a later point if we want to calculate our yield. In the above case this looks something like:
 
