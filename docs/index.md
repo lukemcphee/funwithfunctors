@@ -1,11 +1,11 @@
 ---
-layout: default
+layout: home
 title: Fun with Functors
 ---
 
 # Fun with Functors
 
-Welcome to funWithFunctors, my functional programming blog. 
+Welcome to fun with functors, my functional programming blog. 
 
 Here I write about programming, mainly with a functional-first bias, but may cover other topics along the way.
 
