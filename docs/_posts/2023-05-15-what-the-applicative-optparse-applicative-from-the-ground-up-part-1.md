@@ -38,7 +38,7 @@ The first change in the applicative functor is the `pure` function, we're not go
 
 The second function in applicative is more interesting: `<*>` (pronounced "app"). From the signature we can see that it's a function, that takes a function (of type `a->b`) wrapped in a functor, and a functor of type `a`, then returns a functor of type `b` — the only real difference from the standard `fmap` being that the initial function we're passing in is wrapped in a functor of the same kind. At this point, if you come from an imperative background it's tempting of thinking of a use-case that looks something like this:
 
-```
+```haskell
 someFunc :: Num a => a -> a
 someFunc = \x -> x + 1
 
@@ -51,7 +51,7 @@ result = someFunc <$> someMaybe
 
 Which we could write using the applicative functions as:
 
-```
+```haskell
 someFunc :: Num a => a -> a
 someFunc = \x -> x + 1
 
@@ -66,7 +66,7 @@ Personally, I struggled to see the point of this at first. In many languages it'
 
 In all likelihood, if we had more parameters in `someFunc` we'd probably compose this monadically:
 
-```
+```haskell
 someFunc::(Num a ) =>a -> a -> -> a
 someFunc a b c = a + b + c
 
@@ -83,7 +83,7 @@ Again this feels very familiar. The power of applicatives however really shines 
 
 Let's take a really simple data class
 
-```
+```haskell
 type Name = String
 type Age = Int
 type StreetName = String
@@ -97,7 +97,7 @@ sampleSimplePerson = SimplePerson "Harry"
 
 Like all constructors `SimplePerson` is just a function, which in this case consumes a `Name` and returns a `SimplePerson`. If we have some function that generates a `Maybe` `firstName` for us, we can use our old friend `fmap` to generate a `Maybe SimplePerson`:
 
-```
+```haskell
 ghci> :t SimplePerson
 SimplePerson :: String -> SimplePerson
 
@@ -107,7 +107,7 @@ Just (SimplePerson {firstName = "Harry"})
 
 So far so good, but let's take a type with a little more information, say:
 
-```
+```haskell
 data Person = Person
     { name :: Name
     , age :: Age
@@ -118,28 +118,28 @@ data Person = Person
 
 ```
 
-```
+```haskell
 ghci> :t Person
 Person :: Name -> Age -> PostCode -> StreetName -> Person
 ```
 
 we can see that `fmap` isn't going to cut it — it doesn't take enough parameters. To allow us to use the same `fmap` style we used above for `SimplePerson` we'd really need something like:
 
-```
+```haskell
 magicMap:: (Name -> Age -> PostCode -> StreetName -> Person) -> Maybe Name -> Maybe Age -> Maybe PostCode -> Maybe StreetName -> Maybe Person
 
 ```
 
 For obvious reasons this isn't going to work for us on a practical, what we really need is a _generalised_ way of applying this kind of mapping — enter `<*>`. The critical thing to note is that working with a language like Haskell, we get partial application out the box, so if we don't apply all the parameters required to a function that's ok, we'll just get back another function that consumes the rest. That means we can write this:
 
-```
-ghci> :t Person “Harry”
+```haskell
+ghci> :t Person "Harry"
 Person :: Age -> PostCode -> StreetName -> Person
 ```
 
 Or like this:
 
-```
+```haskell
 ghci> :t fmap Person $ Just "Harry"
 fmap Person $ Just "Harry"
   :: Maybe (Age -> PostCode -> StreetName -> Person)

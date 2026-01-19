@@ -15,13 +15,13 @@ In this post we're going to be following on from the previous entry covering som
 
 Create a baseline project using `stack`:
 
-```raw
+```shell
 $ stack new gh-cli
 ```
 
 Once you've done this all we need to do is add `optparse-applicative` to our `package.yaml` file under `dependencies`:
 
-```raw
+```yaml
 dependencies:
 - base >= 4.7 && < 5
 - optparse-applicative
@@ -31,7 +31,7 @@ dependencies:
 
 Next let's start with a very basic example that we've shamelessly stolen from the `optparse-applicative` docs and plug this into our `Main.hs`:
 
-```
+```haskell
 module Main (main) where
 
 import Options.Applicative
@@ -74,7 +74,7 @@ greet _ = return ()
 
 Running using stack we can see that this is working:
 
-```raw
+```shell
 $ stack exec -- gh-cli-exe
 Missing: --hello TARGET
 
@@ -88,7 +88,7 @@ Hello, Pablo!
 
 NB: I had a bit of bother getting emacs to connect to the haskell lsp having not run it in a while due to some versioning issues. For me the fix was to use ghcup to get onto all the `recommended` versions. I had to also manually point lsp-haskell to the correct path. My `init.el` file now looks like this:
 
-```
+```elisp
 (use-package lsp-haskell
   :ensure t
   :config
@@ -105,14 +105,14 @@ NB: I had a bit of bother getting emacs to connect to the haskell lsp having not
 
 In this post we're going to be breaking down exactly what's going on here; specifically looking at how applicatives are used. Before we get started let's do a quick refactor; this isn't strictly necessary but the code in the examples is a little terse so it can be harder to tell exactly what each part is doing. Right at the start of `main` we've got:
 
-```
+```haskell
 main = greet =<< execParser opts
   where ...
 ```
 
 `=<<` is just syntactic sugar for `bind` but with the arguments reversed (ie `(a -> m b) -> m a -> m b`) which is elegant, but let's just refactor this to good old `do` notation in the interests of clarity:
 
-```
+```haskell
 main = do
   parsedOpts <- getInput
   greet parsedOpts
@@ -123,7 +123,7 @@ main = do
 
 Lets take this a step further and do a bit more of a tidy up, improve some variable names, add some type hints, and run `fourmolu` set the formatting:
 
-```
+```haskell
 data InputOptions = InputOptions
     { helloTarget :: String
     , isQuiet :: Bool
@@ -184,7 +184,7 @@ We've gone a little overboard with extracting some of our variables here and we'
 
 Let's break down what's going on into chunks so we can see exactly how this works; for the sake of completeness we'll first break down our main function. The first thing we do is set up our input type `opts`:
 
-```
+```haskell
     infoMod :: InfoMod a
     infoMod = fullDesc
      <> progDesc "Print a greeting for TARGET"
@@ -199,7 +199,7 @@ Let's break down what's going on into chunks so we can see exactly how this work
 
 The key function here (`info`) is a function from optparse-applicative; it's type is
 
-```
+```haskell
 info :: Parser a -> InfoMod a -> ParserInfo aSource
 ```
 
@@ -207,14 +207,14 @@ All this is doing is creating a `ParserInfo` object from `Parser` (in our case o
 
 Next we're calling `execParser` (`execParser :: ParserInfo a -> IO a`) from optparse-applicative with our `ParserInfo` to tell it how to handle our input:
 
-```
+```haskell
     getInput :: IO InputOptions
     getInput = execParser opts
 ```
 
 Once we've got our input, we simply pass this onto our handler function and we're good to go:
 
-```
+```haskell
 main = do
   parsedInput <- getInput
   handleInput parsedInput
@@ -226,7 +226,7 @@ main = do
 
 The optparse-applicative library — unsurprisingly —makes use of applicative-style quite widely; let's use our instance of `inputOptions` as a specific example. For reference, the definition is here:
 
-```
+```haskell
 inputOptions :: Parser InputOptions
 inputOptions = InputOptions
       <$> strOption
@@ -247,7 +247,7 @@ inputOptions = InputOptions
 
 If we remember from our last post, `<$>` is just an infix `fmap` operation; for the purposes of illustration we can start off by turning this:
 
-```
+```haskell
 InputOptions
       <$> strOption
           ( long "helloTarget"
@@ -257,7 +257,7 @@ InputOptions
 
 into something thats maybe a bit more declarative like this:
 
-```
+```haskell
 partialInput :: Parser (Bool -> Int -> InputOptions)
 partialInput = fmap InputOptions $ strOption $ long "helloTarget" <> metavar "TARGET" <> help "Target for the greeting" 
 
@@ -269,7 +269,7 @@ Here, we've pulled out the first part of our `Parser`, that so far just "wraps" 
 
 The important thing to remember here is that the function in our Parser, of type `Bool -> Int -> InputOptions`, can be thought of as having type `a -> b -> c` _or_ `a -> b` where `b` is simply a function of type `b -> c`. This allows us to use `<*>` to compose in our `Bool` parameter using `switch` and our `Int` parameter using `option auto` respectively (NB: ). In these cases `<*>` will effectively "unwrap" our `Bool`, and `Int` parameters (remember `switch` returns a `Parser Bool` and `option auto` is in our case returning a `Parser Int`) for us to build up our `InputOptions` and leave us with a `Parser InputOptions` when we're done. If we wanted to do this in the classic monadic style we'd need to do something like this:
 
-```
+```haskell
 withoutApp :: Parser InputOptions
 withoutApp = do
   helloTarget <- strOption $ long "helloTarget" <> metavar "TARGET" <> help "Target for the greeting"

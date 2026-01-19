@@ -23,7 +23,7 @@ For a full local installation of zeppelin the official docs recommend that you d
 
 Let's create our docker-compose.yml:
 
-```
+```shell
 $ mkdir zeppelin && cd $_ && touch docker-compose.yml
 ```
 
@@ -46,7 +46,7 @@ services:
 
 Now all we need to do now is start up our container:
 
-```
+```shell
 $ docker-compose up
 ```
 
@@ -107,6 +107,7 @@ val vaccinations = df.select("location", "date", "total_vaccinations")
         .withColumn("date", to_date(col("date"),"yyyy-MM-dd")) // convert our dates into a more usable format
         .sort("date")
         .sort("location")
+```scala
 vaccinations.createOrReplaceTempView("vaccinations") // we'll use this later
 ```
 
@@ -270,6 +271,7 @@ val detailsDs = df.select(
         $"date")
     .as[Details]
 
+```scala
 val ukResults = detailsDs.filter(details => details.location.equals("United Kingdom"))
 ```
 

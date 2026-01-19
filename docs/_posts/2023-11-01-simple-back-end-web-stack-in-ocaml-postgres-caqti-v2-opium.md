@@ -17,7 +17,7 @@ Once we've got our new project, add the dependencies we're going to need into ou
 
 To install the dependencies we'll need, update your `dune-project` file so your dependencies section so it contains the following dependencies
 
-```
+```dune
  (depends ocaml dune
   lwt
   lwt_ppx
@@ -34,14 +34,14 @@ To install the dependencies we'll need, update your `dune-project` file so your 
 
 To install all these run `opam install ./ --deps-only` on your base project directory. This can be run any time you want to add a dependency to this file and saves you running `opam install xyz` every time. Next, let's update our project structure a little. Rather than have a single `lib` directory, to me it makes more sense to split this up as we would in a real project.
 
-```
+```shell
 mkdir lib/repo
 mv lib/dune lib/repo
 ```
 
 Our `repo` directory is going to contain everything we need for interacting with the db layer, so let's update our library name and add the dependencies we'll need:
 
-```
+```dune
 (library
  (name repo)
  (libraries
@@ -57,7 +57,7 @@ Our `repo` directory is going to contain everything we need for interacting with
 
 Next, let's create a postgres instance we can interact with. In our base directory add a `docker-compose.yml` file containing the following:
 
-```
+```yaml
 version: '3'
 services:
   flyway:
@@ -84,7 +84,7 @@ Note that we're using flyway for our database migrations; we're mounting a confi
 
 Create a file `docker-flyway.config` containing:
 
-```
+```properties
 flyway.url=jdbc:postgresql://postgres:5432/shorty-db
 flyway.user=example-username
 flyway.password=pass
@@ -103,7 +103,7 @@ CREATE TABLE entry (
 
 I've added the following to a file named `nuke_docker_and_restart.sh` to allow us to completely tear the db down when we're done to make it easier to write tests against.
 
-```
+```shell
 docker-compose rm -f
 docker-compose pull
 docker-compose up
@@ -115,7 +115,7 @@ Running this we can see our database coming up and flyway applying our migration
 
 Before we add our code to interact with the db, i've created a `Util.ml` file containing some helper functions:
 
-```
+```ocaml
 let get_uri () = "postgres://example-username:pass@localhost:5432/shorty-db"
 
 let str_error promise =
@@ -142,7 +142,7 @@ let connect_exn () =
 
 Obviously in the real world we would _not_ want to pass in our database credentials like this, but it will do for this example. You can ignore `connect_exn`, I've included examples of how to use this in the repo `README.org` if you'd like to see how to interact with the db from utop. Next we need to create our `Db.ml` file, where we'll house the bulk of our code for interacting with the db.
 
-```
+```ocaml
 module Model = struct
   type entry = { short_url : string; target_url : string } [@@deriving yojson]
   type entry_list = entry list [@@deriving yojson]
@@ -210,7 +210,7 @@ Let's break this down a little. First up we have our `Model` module. In here we'
 
 Next we've declared our `Q` module where we're adding our queries. Let's break one of our queries down to clarify exactly what's going on (I've added the return type to the declaration so it's a little clearer what we're creating):
 
-```
+```ocaml
   let insert: (string * string, unit, [ `Zero ]) Caqti_request.t =
     Caqti_type.(t2 string string ->. unit)
       {|
@@ -221,7 +221,7 @@ Next we've declared our `Q` module where we're adding our queries. Let's break o
 
 One thing to note: `Caqti_type.(stuff)` is an example of ocaml's "local open" syntax; effectively all this is doing is
 
-```
+```ocaml
 let open Caqti_type in 
 stuff
 ```
@@ -236,7 +236,7 @@ In the next block we're simply writing some functions which consume connections 
 
 At this point we've got some queries which we can use to interact with the database, let's write some tests to make sure they work. Using the same directory structure as before, we'll add our tests under `lib/repo/db.ml` and add our dependencies under `lib/repo/dune`:
 
-```
+```dune
 (library
  (name repo_test)
  (inline_tests)
@@ -247,7 +247,7 @@ At this point we've got some queries which we can use to interact with the datab
 
 and
 
-```
+```ocaml
  open Repo.Db.Model
 
 let str_error promise =
@@ -285,7 +285,7 @@ let%test_unit "Able to add to the database" =
 
 To run these:
 
-```
+```shell
 $ ./nuke_docker_and_restart.sh
 # and in another window
 $ dune runtest
@@ -293,7 +293,7 @@ $ dune runtest
 
 At this point we've got everything we need up and running to interact with our little database, now we're ready to add our Opium layer. This part is fairly simple, we could add to a `lib/controllers/` repo but for the sake of simplicity we're just going to add everything to our `bin/main.ml` file and `bin/dune` the requisite dependencies.
 
-```
+```dune
 (executable
  (public_name shorty)
  (name main)
@@ -302,7 +302,7 @@ At this point we've got everything we need up and running to interact with our l
   (pps lwt_ppx)))
 ```
 
-```
+```ocaml
 open Opium
 open Repo
 open Repo.Db
@@ -360,7 +360,7 @@ let _ =
 
 Opium has a really simple api; `App.get` and `Api.put` both have signature
 
-```
+```ocaml
 string -> (Request.t -> Response.t Lwt.t) -> App.t -> App.t
 ```
 
@@ -368,7 +368,7 @@ where the first parameter is the route we're binding to then the handler functio
 
 Spinning up our app we're now able to add and view entries in our db over our new server:
 
-```
+```shell
 # first window 
 $ dune exec -- shorty
 # second window
