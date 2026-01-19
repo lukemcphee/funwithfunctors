@@ -5,11 +5,19 @@ title: Fun with Functors
 
 # Fun with Functors
 
-Thoughts on programming, Scala, Spark, and functional ideas.
+Welcome to funWithFunctors, my functional programming blog. 
+
+Here I write about programming, mainly with a functional-first bias, but may cover other topics along the way.
 
 ## Posts
-
 {% for post in site.posts %}
-- **{{ post.date | date: "%Y-%m-%d" }}** —
-  [{{ post.title }}]({{ post.url | relative_url }})
+### {{ post.title }}
+**{{ post.date | date: "%Y-%m-%d" }}**
+
+{{ post.excerpt }}
+
+[Read more →]({{ post.url | relative_url }})
+
+---
+
 {% endfor %}
