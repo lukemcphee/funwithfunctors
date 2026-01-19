@@ -1,7 +1,7 @@
 title: Fun with Functors
 description: Welcome
-url: "https://lukemcphee.github.io"
-baseurl: "/funwithfunctors"
+baseurl: ""
+url: "https://funwithfunctors.com"
 
 markdown: kramdown
 remote_theme: pages-themes/minimal@v0.2.0
